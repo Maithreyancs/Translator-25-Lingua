@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LinguaVoice - Dedicated History and Saved Favorites Manager.">
+    <title>History & Favorites - LinguaVoice</title>
+    
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        .filter-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .search-input-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.85rem;
+            flex: 1;
+            max-width: 400px;
+        }
+        .search-input-box input {
+            border: none;
+            background: transparent;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+            outline: none;
+            width: 100%;
+        }
+        .filter-btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header" role="banner">
+            <div class="container">
+                <div class="header-inner">
+                    <div class="brand-section">
+                        <div class="brand-logo-icon" aria-hidden="true">🌐</div>
+                        <div class="brand-text">
+                            <h1 class="brand-title">LinguaVoice</h1>
+                            <span class="brand-tagline">Translate. Listen. Understand.</span>
+                        </div>
+                    </div>
+
+                    <nav class="header-nav" role="navigation" aria-label="Main Navigation">
+                        <a href="../index.html" class="nav-link">
+                            <span aria-hidden="true">🏠</span> Studio
+                        </a>
+                        <a href="history.html" class="nav-link active" aria-current="page">
+                            <span aria-hidden="true">📜</span> History & Saved
+                        </a>
+                        <a href="about.html" class="nav-link">
+                            <span aria-hidden="true">ℹ️</span> About Project
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="app-main">
+            <div class="container">
+                <section class="hero-banner">
+                    <span class="hero-pill">
+                        <span aria-hidden="true">📜</span> Storage & Records
+                    </span>
+                    <h2 class="hero-title">Translation Records & Favorites</h2>
+                    <p class="hero-subtitle">
+                        View, search, play back, or copy your recent translations and starred favorites saved in your browser.
+                    </p>
+                </section>
+
+                <!-- Filter & Search Toolbar -->
+                <div class="filter-toolbar">
+                    <div class="search-input-box">
+                        <span aria-hidden="true">🔍</span>
+                        <input type="text" id="filter-input" placeholder="Search by sentence or translated text...">
+                    </div>
+                    <div class="filter-btn-group">
+                        <button type="button" id="export-json-btn" class="btn btn-outline" title="Export as JSON">
+                            <span aria-hidden="true">💾</span> Export JSON
+                        </button>
+                        <button type="button" id="page-clear-history-btn" class="btn btn-outline" title="Clear all history">
+                            <span aria-hidden="true">🗑️</span> Clear History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs & Container -->
+                <div class="drawer-section">
+                    <div class="drawer-header">
+                        <div class="drawer-tabs" role="tablist">
+                            <button type="button" class="drawer-tab-btn active" id="tab-history" role="tab" aria-selected="true">
+                                <span aria-hidden="true">📜</span> All Recent History
+                                <span class="tab-badge" id="count-history">0</span>
+                            </button>
+                            <button type="button" class="drawer-tab-btn" id="tab-favorites" role="tab" aria-selected="false">
+                                <span aria-hidden="true">⭐</span> Starred Favorites
+                                <span class="tab-badge" id="count-favorites">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane active" id="records-pane">
+                        <div id="records-grid" class="history-items-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer" role="contentinfo">
+            <div class="container">
+                <div class="footer-content">
+                    <p>© 2026 LinguaVoice • Multilingual Sentence Translator & Voice Playback System</p>
+                    <div class="footer-links">
+                        <a href="../index.html">Back to Studio</a>
+                        <a href="about.html">Architecture & Docs</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Application Script Modules -->
+    <script src="../js/languages.js"></script>
+    <script src="../services/translationService.js"></script>
+    <script src="../js/speech.js"></script>
+    <script src="../js/history.js"></script>
+    <script src="../js/favorites.js"></script>
+    <script src="../js/ui.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let activeView = 'history';
+            let searchQuery = '';
+
+            const recordsGrid = document.getElementById('records-grid');
+            const filterInput = document.getElementById('filter-input');
+            const tabHistory = document.getElementById('tab-history');
+            const tabFavorites = document.getElementById('tab-favorites');
+            const countHistory = document.getElementById('count-history');
+            const countFavorites = document.getElementById('count-favorites');
+            const clearHistoryBtn = document.getElementById('page-clear-history-btn');
+            const exportJsonBtn = document.getElementById('export-json-btn');
+
+            uiController.cacheElements();
+
+            function render() {
+                const historyItems = historyManager.getAll();
+                const favItems = favoritesManager.getAll();
+
+                countHistory.textContent = historyItems.length;
+                countFavorites.textContent = favItems.length;
+
+                let items = activeView === 'history' ? historyItems : favItems;
+
+                if (searchQuery.trim()) {
+                    const q = searchQuery.toLowerCase().trim();
+                    items = items.filter(item => 
+                        item.originalText.toLowerCase().includes(q) ||
+                        item.translatedText.toLowerCase().includes(q)
+                    );
+                }
+
+                if (items.length === 0) {
+                    recordsGrid.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <span class="empty-icon" aria-hidden="true">${activeView === 'history' ? '📜' : '⭐'}</span>
+                            <p class="empty-title">No ${activeView === 'history' ? 'history records' : 'favorites'} found</p>
+                            <p class="empty-subtitle">${searchQuery ? 'Try adjusting your search query.' : 'Use the translation studio to create new translations.'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                recordsGrid.innerHTML = items.map(item => {
+                    const srcLang = getLanguageByCode(item.sourceLang);
+                    const tgtLang = getLanguageByCode(item.targetLang);
+                    const isFav = favoritesManager.isFavorite(item.originalText, item.targetLang);
+
+                    return `
+                        <div class="history-card" data-id="${item.id}">
+                            <div class="history-card-header">
+                                <div class="history-lang-badges">
+                                    <span class="badge badge-source">${srcLang ? srcLang.flag : '🌐'} ${srcLang ? srcLang.name : item.sourceLang}</span>
+                                    <span class="lang-arrow" aria-hidden="true">➔</span>
+                                    <span class="badge badge-target">${tgtLang ? tgtLang.flag : '🌐'} ${tgtLang ? tgtLang.name : item.targetLang}</span>
+                                </div>
+                                <span class="history-time">${item.formattedTime || ''}</span>
+                            </div>
+
+                            <div class="history-card-body">
+                                <p class="history-orig"><strong>Source:</strong> ${uiController._escapeHtml(item.originalText)}</p>
+                                <p class="history-trans"><strong>Translated:</strong> ${uiController._escapeHtml(item.translatedText)}</p>
+                            </div>
+
+                            <div class="history-card-actions">
+                                <button class="btn-chip btn-listen" data-text="${uiController._escapeHtml(item.translatedText)}" data-speech="${item.speechCode}" title="Listen speech">
+                                    <span aria-hidden="true">🔊</span> Listen
+                                </button>
+                                <button class="btn-chip btn-copy" data-text="${uiController._escapeHtml(item.translatedText)}" title="Copy translation">
+                                    <span aria-hidden="true">📋</span> Copy
+                                </button>
+                                <button class="btn-chip btn-fav ${isFav ? 'active' : ''}" data-id="${item.id}" title="Toggle favorite">
+                                    <span aria-hidden="true">${isFav ? '⭐' : '☆'}</span> ${isFav ? 'Saved' : 'Save'}
+                                </button>
+                                <button class="btn-chip btn-chip-danger btn-del" data-id="${item.id}" title="Delete record">
+                                    <span aria-hidden="true">🗑️</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Tab Switching
+            tabHistory.addEventListener('click', () => {
+                activeView = 'history';
+                tabHistory.classList.add('active');
+                tabFavorites.classList.remove('active');
+                render();
+            });
+
+            tabFavorites.addEventListener('click', () => {
+                activeView = 'favorites';
+                tabFavorites.classList.add('active');
+                tabHistory.classList.remove('active');
+                render();
+            });
+
+            // Search
+            filterInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                render();
+            });
+
+            // Card Delegations
+            recordsGrid.addEventListener('click', (e) => {
+                const listenBtn = e.target.closest('.btn-listen');
+                const copyBtn = e.target.closest('.btn-copy');
+                const favBtn = e.target.closest('.btn-fav');
+                const delBtn = e.target.closest('.btn-del');
+
+                if (listenBtn) {
+                    const text = listenBtn.getAttribute('data-text');
+                    const speechCode = listenBtn.getAttribute('data-speech') || 'en-US';
+                    speechEngine.speak(text, speechCode);
+                    uiController.showToast('Playing speech audio...', 'info', 2000);
+                    return;
+                }
+
+                if (copyBtn) {
+                    const text = copyBtn.getAttribute('data-text');
+                    uiController.copyToClipboard(text, copyBtn);
+                    return;
+                }
+
+                if (favBtn) {
+                    const id = favBtn.getAttribute('data-id');
+                    const item = (activeView === 'history' ? historyManager.getAll() : favoritesManager.getAll()).find(i => i.id === id);
+                    if (item) {
+                        favoritesManager.toggle(item.sourceLang, item.targetLang, item.originalText, item.translatedText, item.speechCode);
+                        render();
+                    }
+                    return;
+                }
+
+                if (delBtn) {
+                    const id = delBtn.getAttribute('data-id');
+                    if (activeView === 'history') {
+                        historyManager.deleteItem(id);
+                    } else {
+                        favoritesManager.remove(id);
+                    }
+                    render();
+                    uiController.showToast('Record deleted.', 'info', 2000);
+                }
+            });
+
+            // Clear Button
+            clearHistoryBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear all records?')) {
+                    if (activeView === 'history') {
+                        historyManager.clear();
+                    } else {
+                        favoritesManager.clear();
+                    }
+                    render();
+                    uiController.showToast('Cleared successfully.', 'info', 2000);
+                }
+            });
+
+            // Export JSON
+            exportJsonBtn.addEventListener('click', () => {
+                const data = {
+                    exportedAt: new Date().toISOString(),
+                    history: historyManager.getAll(),
+                    favorites: favoritesManager.getAll()
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `linguavoice_records_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                uiController.showToast('Exported records to JSON file!', 'success', 2500);
+            });
+
+            render();
+        });
+    </script>
+</body>
+</html>

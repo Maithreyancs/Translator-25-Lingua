@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LinguaVoice - Multilingual Sentence Translator and Natural Voice Playback Application supporting 25+ global and regional languages.">
+    <title>LinguaVoice - Multilingual Sentence Translator & Voice Playback</title>
+    
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header" role="banner">
+            <div class="container">
+                <div class="header-inner">
+                    <div class="brand-section">
+                        <div class="brand-logo-icon" aria-hidden="true">🌐</div>
+                        <div class="brand-text">
+                            <h1 class="brand-title">LinguaVoice</h1>
+                            <span class="brand-tagline">Translate. Listen. Understand.</span>
+                        </div>
+                    </div>
+
+                    <nav class="header-nav" role="navigation" aria-label="Main Navigation">
+                        <a href="index.html" class="nav-link active" aria-current="page">
+                            <span aria-hidden="true">🏠</span> Studio
+                        </a>
+                        <a href="pages/history.html" class="nav-link">
+                            <span aria-hidden="true">📜</span> History & Saved
+                        </a>
+                        <a href="pages/about.html" class="nav-link">
+                            <span aria-hidden="true">ℹ️</span> About Project
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="app-main">
+            <div class="container">
+                <!-- Hero Section -->
+                <section class="hero-banner" aria-label="Introduction">
+                    <span class="hero-pill">
+                        <span aria-hidden="true">⚡</span> Multilingual Translation & Voice Synthesis
+                    </span>
+                    <h2 class="hero-title">Translate Any Sentence, Listen Naturally</h2>
+                    <p class="hero-subtitle">
+                        Enter a sentence in any language, translate it instantly to Tamil, Hindi, Telugu, Malayalam, Japanese, French, and 20+ more languages, and listen to natural audio playback.
+                    </p>
+                </section>
+
+                <!-- Quick Sample Phrases -->
+                <section class="quick-samples-section" aria-label="Quick Sample Sentences">
+                    <span class="quick-samples-label">Try Samples:</span>
+                    <button type="button" class="sample-chip" data-source="ta" data-text="காலை வணக்கம், நீங்கள் எப்படி இருக்கிறீர்கள்?" data-target="en">
+                        🇮🇳 Tamil Input ➔ English
+                    </button>
+                    <button type="button" class="sample-chip" data-source="hi" data-text="नमस्ते, आप कैसे हैं?" data-target="ta">
+                        🇮🇳 Hindi Input ➔ Tamil
+                    </button>
+                    <button type="button" class="sample-chip" data-source="te" data-text="నమస్కారం, మీరు ఎలా ఉన్నారు?" data-target="en">
+                        🇮🇳 Telugu Input ➔ English
+                    </button>
+                    <button type="button" class="sample-chip" data-source="ja" data-text="こんにちは、お元気ですか？" data-target="en">
+                        🇯🇵 Japanese Input ➔ English
+                    </button>
+                    <button type="button" class="sample-chip" data-source="fr" data-text="Bonjour, comment allez-vous ?" data-target="ta">
+                        🇫🇷 French Input ➔ Tamil
+                    </button>
+                    <button type="button" class="sample-chip" data-source="en" data-text="Good morning, how are you?" data-target="ta">
+                        🇺🇸 English Input ➔ Tamil
+                    </button>
+                </section>
+
+                <!-- Translation Studio -->
+                <section class="translator-studio" aria-label="Translation Studio">
+                    <div class="cards-grid">
+                        <!-- Source Card (Input) -->
+                        <div class="studio-card source-card" id="source-card">
+                            <div class="card-header">
+                                <div class="lang-selector-group">
+                                    <label for="source-lang-select" class="lang-label">From</label>
+                                    <select id="source-lang-select" class="select-picker" aria-label="Source Language">
+                                        <!-- Populated dynamically by languages.js -->
+                                    </select>
+                                </div>
+                                <div class="swap-button-container">
+                                    <button type="button" id="swap-langs-btn" class="btn-swap" title="Swap source and target languages (Alt+X)" aria-label="Swap languages">
+                                        <span aria-hidden="true">⇄</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <textarea 
+                                    id="source-text-input" 
+                                    class="source-textarea" 
+                                    placeholder="Enter or paste your sentence here... (e.g. 'Good morning, how are you?')"
+                                    maxlength="1000"
+                                    aria-label="Input sentence to translate"></textarea>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="footer-meta">
+                                    <span id="char-counter">0 / 1000 characters</span>
+                                    <span>•</span>
+                                    <span id="word-counter">0 words</span>
+                                </div>
+                                <div class="footer-actions">
+                                    <button type="button" id="mic-btn" class="btn btn-mic btn-icon-square" title="Speak input (Microphone)" aria-label="Use microphone for speech-to-text">
+                                        <span aria-hidden="true">🎙️</span>
+                                    </button>
+                                    <label for="file-input" class="btn btn-outline" title="Upload plain text file (.txt)" style="cursor: pointer;">
+                                        <span aria-hidden="true">📁</span> Upload
+                                    </label>
+                                    <input type="file" id="file-input" accept=".txt" style="display: none;" aria-label="Upload text file">
+                                    <button type="button" id="clear-input-btn" class="btn btn-ghost" title="Clear input text (Alt+C)">
+                                        <span aria-hidden="true">🗑️</span> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Card (Output) -->
+                        <div class="studio-card output-card" id="output-card">
+                            <div class="card-header card-header-target">
+                                <div class="lang-selector-group">
+                                    <label for="target-lang-select" class="lang-label">To</label>
+                                    <select id="target-lang-select" class="select-picker" aria-label="Target Language">
+                                        <!-- Populated dynamically by languages.js -->
+                                    </select>
+                                </div>
+                                <div id="target-lang-badge" class="badge-target-lang">
+                                    🇮🇳 Tamil • தமிழ்
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <!-- Placeholder when empty -->
+                                <div id="output-placeholder" class="target-placeholder">
+                                    <div class="target-placeholder-icon" aria-hidden="true">🗣️</div>
+                                    <p class="target-placeholder-text">
+                                        Translated sentence and speech controls will appear here.
+                                    </p>
+                                </div>
+
+                                <!-- Output Content Box -->
+                                <div id="output-content" class="output-content-box">
+                                    <div id="target-text-display" class="target-text-display" tabindex="0" role="region" aria-label="Translated sentence output"></div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="footer-meta">
+                                    <span id="target-char-count">0 characters</span>
+                                </div>
+                                <div class="footer-actions">
+                                    <button type="button" id="copy-translation-btn" class="btn btn-outline" disabled title="Copy translation">
+                                        <span aria-hidden="true">📋</span> Copy
+                                    </button>
+                                    <button type="button" id="favorite-btn" class="btn btn-outline btn-favorite" disabled title="Save to Favorites">
+                                        <span aria-hidden="true">☆</span> Favorite
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Center Bar -->
+                    <div class="action-center-bar" role="region" aria-label="Translation and Speech Playback Actions">
+                        <div class="main-actions-group">
+                            <button type="button" id="translate-speak-btn" class="btn btn-primary btn-large" title="Translate and automatically play speech (Ctrl+Enter)">
+                                <span class="spinner" id="translate-spinner" aria-hidden="true"></span>
+                                <span id="translate-btn-text">🌐 Translate & Speak</span>
+                            </button>
+                            <button type="button" id="translate-only-btn" class="btn btn-outline" title="Translate text without audio">
+                                <span>Translate Only</span>
+                            </button>
+                            <button type="button" id="play-translation-btn" class="btn btn-emerald" disabled title="Play speech in selected target language (Alt+P)">
+                                <span aria-hidden="true">🔊</span> Play Translation
+                            </button>
+                            <button type="button" id="pause-speech-btn" class="btn btn-outline" style="display: none;" title="Pause speech">
+                                <span aria-hidden="true">⏸️</span> Pause
+                            </button>
+                            <button type="button" id="resume-speech-btn" class="btn btn-outline" style="display: none;" title="Resume speech">
+                                <span aria-hidden="true">▶️</span> Resume
+                            </button>
+                            <button type="button" id="stop-speech-btn" class="btn btn-outline" disabled title="Stop playback (Alt+S)">
+                                <span aria-hidden="true">⏹️</span> Stop
+                            </button>
+                            <button type="button" id="replay-speech-btn" class="btn btn-ghost" disabled title="Replay translation">
+                                <span aria-hidden="true">🔄</span> Replay
+                            </button>
+                        </div>
+
+                        <div class="status-indicator-group">
+                            <div class="speech-waveform" id="speech-indicator" aria-hidden="true">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <span class="status-dot" id="status-pill" aria-hidden="true"></span>
+                            <span id="status-message">Ready</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Voice Settings Panel -->
+                <section class="voice-settings-card" aria-label="Speech and Voice Settings">
+                    <h3 class="panel-title">
+                        <span aria-hidden="true">🎙️</span> Voice & Playback Controls
+                    </h3>
+
+                    <div class="settings-grid">
+                        <!-- Voice Selection -->
+                        <div class="setting-item">
+                            <div class="setting-header">
+                                <label for="voice-select" class="setting-label">Installed Voice Model</label>
+                            </div>
+                            <select id="voice-select" class="select-picker" aria-label="Voice model selection">
+                                <option value="-1">Auto (System Natural Voice)</option>
+                            </select>
+                            <span class="setting-hint" id="voice-count-hint">Voices will update automatically based on target language</span>
+                        </div>
+
+                        <!-- Speech Speed Slider -->
+                        <div class="setting-item">
+                            <div class="setting-header">
+                                <label for="speed-slider" class="setting-label">Speech Speed</label>
+                                <span class="setting-value-badge" id="speed-display">1.0x</span>
+                            </div>
+                            <input type="range" id="speed-slider" class="range-slider" min="0.5" max="2.0" step="0.1" value="1.0" aria-label="Speech Speed">
+                            <div class="slider-scale">
+                                <span>0.5x (Slow)</span>
+                                <span>1.0x</span>
+                                <span>2.0x (Fast)</span>
+                            </div>
+                        </div>
+
+                        <!-- Pitch Slider -->
+                        <div class="setting-item">
+                            <div class="setting-header">
+                                <label for="pitch-slider" class="setting-label">Voice Pitch</label>
+                                <span class="setting-value-badge" id="pitch-display">1.0</span>
+                            </div>
+                            <input type="range" id="pitch-slider" class="range-slider" min="0.5" max="1.5" step="0.1" value="1.0" aria-label="Voice Pitch">
+                            <div class="slider-scale">
+                                <span>0.5 (Low)</span>
+                                <span>1.0 (Normal)</span>
+                                <span>1.5 (High)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History & Saved Favorites Section -->
+                <section class="drawer-section" aria-label="Translation History and Favorites">
+                    <div class="drawer-header">
+                        <div class="drawer-tabs" role="tablist">
+                            <button type="button" class="drawer-tab-btn active" data-tab="history" role="tab" aria-selected="true" aria-controls="history-pane">
+                                <span aria-hidden="true">📜</span> Recent Translations
+                                <span class="tab-badge" id="history-badge-count">0</span>
+                            </button>
+                            <button type="button" class="drawer-tab-btn" data-tab="favorites" role="tab" aria-selected="false" aria-controls="favorites-pane">
+                                <span aria-hidden="true">⭐</span> Saved Favorites
+                                <span class="tab-badge" id="favorites-badge-count">0</span>
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" id="clear-history-btn" class="btn btn-ghost" title="Clear all recent history">
+                                <span aria-hidden="true">🗑️</span> Clear History
+                            </button>
+                            <button type="button" id="clear-favorites-btn" class="btn btn-ghost" style="display: none;" title="Clear all favorites">
+                                <span aria-hidden="true">🗑️</span> Clear Favorites
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- History Tab Pane -->
+                    <div id="history-pane" class="tab-pane active" role="tabpanel">
+                        <div id="history-list" class="history-items-grid">
+                            <!-- Populated dynamically by ui.js -->
+                        </div>
+                    </div>
+
+                    <!-- Favorites Tab Pane -->
+                    <div id="favorites-pane" class="tab-pane" role="tabpanel">
+                        <div id="favorites-list" class="history-items-grid">
+                            <!-- Populated dynamically by ui.js -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer" role="contentinfo">
+            <div class="container">
+                <div class="footer-content">
+                    <p>© 2026 LinguaVoice • Multilingual Sentence Translator & Voice Playback System</p>
+                    <div class="footer-links">
+                        <a href="pages/about.html">Architecture & Docs</a>
+                        <a href="pages/history.html">Full History Manager</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Non-intrusive Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Application Script Modules (In Dependency Order) -->
+    <script src="js/languages.js"></script>
+    <script src="services/translationService.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/favorites.js"></script>
+    <script src="js/translator.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+/* ==========================================================================
+   LinguaVoice - Responsive Design Stylesheet
+   Breakpoints for Tablets, Large Screens, and Mobile Devices
+   ========================================================================== */
+
+/* Large Tablets & Small Laptops (<= 992px) */
+@media (max-width: 992px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .swap-button-container {
+        margin: -0.5rem 0;
+    }
+
+    .btn-swap {
+        transform: rotate(90deg);
+    }
+
+    .btn-swap:hover {
+        transform: rotate(270deg) scale(1.1);
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .setting-item:first-child {
+        grid-column: span 2;
+    }
+
+    .action-center-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .main-actions-group {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .main-actions-group .btn {
+        width: 100%;
+    }
+
+    .status-indicator-group {
+        justify-content: center;
+    }
+}
+
+/* Mobile Devices & Small Tablets (<= 640px) */
+@media (max-width: 640px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .app-header .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .header-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .hero-title {
+        font-size: 1.625rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9375rem;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .lang-selector-group {
+        width: 100%;
+    }
+
+    .source-textarea {
+        min-height: 160px;
+        font-size: 1rem;
+    }
+
+    .target-placeholder {
+        min-height: 160px;
+    }
+
+    .output-content-box {
+        min-height: 160px;
+    }
+
+    .target-text-display {
+        font-size: 1.125rem;
+    }
+
+    .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .footer-meta {
+        justify-content: space-between;
+    }
+
+    .footer-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .footer-actions .btn {
+        width: 100%;
+        padding: 0.65rem 0.5rem;
+    }
+
+    .quick-samples-section {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sample-chip {
+        flex-shrink: 0;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .setting-item:first-child {
+        grid-column: auto;
+    }
+
+    .history-items-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .drawer-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .drawer-tabs {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .drawer-tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .toast-container {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+    }
+
+    .toast {
+        max-width: 100%;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}

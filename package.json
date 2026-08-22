@@ -1,0 +1,24 @@
+{
+  "name": "linguavoice-multilingual-translator",
+  "version": "2.0.0",
+  "description": "LinguaVoice - Multilingual Sentence Translator & Voice Playback System with Web Speech API and neural translation engine.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve .",
+    "dev": "npx -y serve ."
+  },
+  "keywords": [
+    "translator",
+    "text-to-speech",
+    "multilingual",
+    "speech-synthesis",
+    "web-speech-api",
+    "tamil",
+    "hindi",
+    "telugu",
+    "malayalam",
+    "japanese"
+  ],
+  "author": "LinguaVoice Team",
+  "license": "MIT"
+}

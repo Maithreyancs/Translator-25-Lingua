@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LinguaVoice - Architectural Overview and Documentation for the Multilingual Sentence Translator & Voice Playback Application.">
+    <title>About LinguaVoice - Project Architecture & Documentation</title>
+    
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/responsive.css">
+    <style>
+        .doc-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .doc-section h2 {
+            font-size: 1.5rem;
+            color: var(--primary-700);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-50);
+            padding-bottom: 0.5rem;
+        }
+        .doc-section h3 {
+            font-size: 1.15rem;
+            color: var(--text-primary);
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+        .feature-box {
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+        }
+        .feature-box-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary-700);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .lang-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+        .lang-table th, .lang-table td {
+            padding: 0.65rem 0.85rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .lang-table th {
+            background: var(--bg-surface-subtle);
+            color: var(--text-secondary);
+            font-weight: 700;
+        }
+        .lang-table tr:hover td {
+            background: var(--primary-50);
+        }
+        .code-box {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-family: monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 0.75rem 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header" role="banner">
+            <div class="container">
+                <div class="header-inner">
+                    <div class="brand-section">
+                        <div class="brand-logo-icon" aria-hidden="true">🌐</div>
+                        <div class="brand-text">
+                            <h1 class="brand-title">LinguaVoice</h1>
+                            <span class="brand-tagline">Translate. Listen. Understand.</span>
+                        </div>
+                    </div>
+
+                    <nav class="header-nav" role="navigation" aria-label="Main Navigation">
+                        <a href="../index.html" class="nav-link">
+                            <span aria-hidden="true">🏠</span> Studio
+                        </a>
+                        <a href="history.html" class="nav-link">
+                            <span aria-hidden="true">📜</span> History & Saved
+                        </a>
+                        <a href="about.html" class="nav-link active" aria-current="page">
+                            <span aria-hidden="true">ℹ️</span> About Project
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="app-main">
+            <div class="container">
+                <section class="hero-banner">
+                    <span class="hero-pill">
+                        <span aria-hidden="true">📚</span> Project Documentation
+                    </span>
+                    <h2 class="hero-title">About LinguaVoice Architecture</h2>
+                    <p class="hero-subtitle">
+                        An accessible, modular web application combining multi-provider neural translation with native Web Speech API synthesis for 25+ global and regional languages.
+                    </p>
+                </section>
+
+                <!-- Overview & Objectives -->
+                <article class="doc-section">
+                    <h2>1. Project Overview & Objectives</h2>
+                    <p>
+                        <strong>LinguaVoice</strong> is an interactive web-based multilingual sentence translator and speech synthesis application designed to bridge language barriers. It allows users to enter or dictate a sentence in any source language, translate it with high fidelity into a selected target language, and immediately synthesize natural speech using the browser's native Web Speech API.
+                    </p>
+                    <p>
+                        Unlike visual-only demo translators, LinguaVoice dynamically links language selection directly to both translation API parameters and Text-to-Speech (TTS) locale engines.
+                    </p>
+
+                    <div class="features-grid">
+                        <div class="feature-box">
+                            <div class="feature-box-title"><span>🌐</span> Multi-tier Translation</div>
+                            <p>Primary Google GTX endpoint with MyMemory fallback and offline phrasebook. Zero mandatory API keys required.</p>
+                        </div>
+                        <div class="feature-box">
+                            <div class="feature-box-title"><span>🎙️</span> Dynamic Speech Synthesis</div>
+                            <p>Real TTS via Web Speech API with automatic voice matching for Tamil, Hindi, Telugu, Malayalam, Japanese, and more.</p>
+                        </div>
+                        <div class="feature-box">
+                            <div class="feature-box-title"><span>🎛️</span> Complete Voice Controls</div>
+                            <p>Play, Pause, Resume, Stop, Replay, dynamic voice selection, and fine-grained 0.5x–2.0x speech speed adjustment.</p>
+                        </div>
+                        <div class="feature-box">
+                            <div class="feature-box-title"><span>📜</span> History & Favorites</div>
+                            <p>Persistent storage using browser localStorage with duplicate prevention, instant replay, and star favorites.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Software Architecture -->
+                <article class="doc-section">
+                    <h2>2. Modular Software Architecture</h2>
+                    <p>
+                        The application is structured into discrete, single-responsibility ES modules:
+                    </p>
+                    <div class="code-box">
+multilingual-translator/
+├── index.html                  # Main interactive translation studio
+├── pages/
+│   ├── about.html              # Architecture & system documentation
+│   └── history.html            # Dedicated history & favorites viewer
+├── css/
+│   ├── style.css               # Core design tokens, layout, typography
+│   ├── components.css          # Studio cards, buttons, sliders, toasts
+│   └── responsive.css          # Responsive breakpoints for all screens
+├── js/
+│   ├── languages.js            # Central catalog of 25+ supported languages
+│   ├── speech.js               # Web Speech API engine (TTS & Speech-to-Text)
+│   ├── translator.js           # Translation orchestration controller
+│   ├── history.js              # LocalStorage history manager (max 20)
+│   ├── favorites.js            # LocalStorage favorites manager
+│   ├── ui.js                   # DOM rendering, toasts, copy feedback
+│   └── app.js                  # Main coordinator & keyboard shortcuts
+├── services/
+│   └── translationService.js   # Multi-provider translation API client
+└── README.md                   # Comprehensive project documentation
+                    </div>
+                </article>
+
+                <!-- Supported Languages Table -->
+                <article class="doc-section">
+                    <h2>3. Supported Languages & Speech Locales</h2>
+                    <p>
+                        LinguaVoice maintains a central language registry in <code>js/languages.js</code>. The following languages are supported with native script display and designated speech synthesis locale codes:
+                    </p>
+                    <div style="overflow-x: auto;">
+                        <table class="lang-table">
+                            <thead>
+                                <tr>
+                                    <th>Flag</th>
+                                    <th>Language Name</th>
+                                    <th>Native Script</th>
+                                    <th>Language Code</th>
+                                    <th>TTS Speech Code</th>
+                                    <th>Region</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>🇮🇳</td><td>Tamil</td><td>தமிழ்</td><td><code>ta</code></td><td><code>ta-IN</code></td><td>India / Sri Lanka</td></tr>
+                                <tr><td>🇮🇳</td><td>Hindi</td><td>हिन्दी</td><td><code>hi</code></td><td><code>hi-IN</code></td><td>India</td></tr>
+                                <tr><td>🇺🇸</td><td>English</td><td>English</td><td><code>en</code></td><td><code>en-US</code></td><td>Global</td></tr>
+                                <tr><td>🇮🇳</td><td>Telugu</td><td>తెలుగు</td><td><code>te</code></td><td><code>te-IN</code></td><td>India</td></tr>
+                                <tr><td>🇮🇳</td><td>Kannada</td><td>ಕನ್ನಡ</td><td><code>kn</code></td><td><code>kn-IN</code></td><td>India</td></tr>
+                                <tr><td>🇮🇳</td><td>Malayalam</td><td>മലയാളം</td><td><code>ml</code></td><td><code>ml-IN</code></td><td>India</td></tr>
+                                <tr><td>🇮🇳</td><td>Bengali</td><td>বাংলা</td><td><code>bn</code></td><td><code>bn-IN</code></td><td>India / Bangladesh</td></tr>
+                                <tr><td>🇮🇳</td><td>Marathi</td><td>मराठी</td><td><code>mr</code></td><td><code>mr-IN</code></td><td>India</td></tr>
+                                <tr><td>🇮🇳</td><td>Gujarati</td><td>ગુજરાતી</td><td><code>gu</code></td><td><code>gu-IN</code></td><td>India</td></tr>
+                                <tr><td>🇮🇳</td><td>Punjabi</td><td>ਪੰਜਾਬੀ</td><td><code>pa</code></td><td><code>pa-IN</code></td><td>India / Pakistan</td></tr>
+                                <tr><td>🇵🇰</td><td>Urdu</td><td>اردو</td><td><code>ur</code></td><td><code>ur-PK</code></td><td>Pakistan / India</td></tr>
+                                <tr><td>🇸🇦</td><td>Arabic</td><td>العربية</td><td><code>ar</code></td><td><code>ar-SA</code></td><td>Middle East</td></tr>
+                                <tr><td>🇫🇷</td><td>French</td><td>Français</td><td><code>fr</code></td><td><code>fr-FR</code></td><td>France / Global</td></tr>
+                                <tr><td>🇩🇪</td><td>German</td><td>Deutsch</td><td><code>de</code></td><td><code>de-DE</code></td><td>Germany / Europe</td></tr>
+                                <tr><td>🇪🇸</td><td>Spanish</td><td>Español</td><td><code>es</code></td><td><code>es-ES</code></td><td>Spain / Americas</td></tr>
+                                <tr><td>🇮🇹</td><td>Italian</td><td>Italiano</td><td><code>it</code></td><td><code>it-IT</code></td><td>Italy</td></tr>
+                                <tr><td>🇧🇷</td><td>Portuguese</td><td>Português</td><td><code>pt</code></td><td><code>pt-BR</code></td><td>Brazil / Portugal</td></tr>
+                                <tr><td>🇷🇺</td><td>Russian</td><td>Русский</td><td><code>ru</code></td><td><code>ru-RU</code></td><td>Russia</td></tr>
+                                <tr><td>🇨🇳</td><td>Chinese (Simplified)</td><td>中文 (简体)</td><td><code>zh-CN</code></td><td><code>zh-CN</code></td><td>China</td></tr>
+                                <tr><td>🇯🇵</td><td>Japanese</td><td>日本語</td><td><code>ja</code></td><td><code>ja-JP</code></td><td>Japan</td></tr>
+                                <tr><td>🇰🇷</td><td>Korean</td><td>한국어</td><td><code>ko</code></td><td><code>ko-KR</code></td><td>South Korea</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <!-- Technical Details -->
+                <article class="doc-section">
+                    <h2>4. Technical Implementation</h2>
+                    <h3>How Translation Works:</h3>
+                    <p>
+                        When a translation is requested, <code>TranslatorController</code> validates the input and calls <code>translationService.translate(text, sourceLang, targetLang)</code>. The service queries Google's GTX single translation endpoint, concatenates multi-segment sentences, detects the input language when "Auto Detect" is used, and caches the result. If a network interruption occurs, it automatically fails over to the MyMemory API or the local offline phrasebook.
+                    </p>
+
+                    <h3>How Text-to-Speech Works:</h3>
+                    <p>
+                        Speech synthesis utilizes the standardized <code>window.speechSynthesis</code> API. When a language is selected, <code>SpeechEngine</code> queries installed voices via <code>getVoices()</code> and filters matching voices for the target speech code (e.g. <code>ta-IN</code> for Tamil). When the user clicks <strong>Translate & Speak</strong> or <strong>Play</strong>, a new <code>SpeechSynthesisUtterance</code> is configured with the selected speed (0.5x–2.0x), pitch, and voice, then dispatched to the speech synthesizer.
+                    </p>
+
+                    <h3>Keyboard Shortcuts:</h3>
+                    <ul>
+                        <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> : Translate and speak output</li>
+                        <li><kbd>Alt</kbd> + <kbd>P</kbd> : Play / Pause audio</li>
+                        <li><kbd>Alt</kbd> + <kbd>S</kbd> : Stop audio playback</li>
+                        <li><kbd>Alt</kbd> + <kbd>X</kbd> : Swap source & target languages</li>
+                        <li><kbd>Alt</kbd> + <kbd>C</kbd> : Clear text input</li>
+                    </ul>
+                </article>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer" role="contentinfo">
+            <div class="container">
+                <div class="footer-content">
+                    <p>© 2026 LinguaVoice • Multilingual Sentence Translator & Voice Playback System</p>
+                    <div class="footer-links">
+                        <a href="../index.html">Studio Home</a>
+                        <a href="history.html">History & Favorites</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

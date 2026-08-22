@@ -1,0 +1,314 @@
+/* ==========================================================================
+   LinguaVoice - Core Design System & Base Stylesheet
+   Modern, Accessible, Professional Typography and Layout
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Color Palette - Vibrant Modern Slate & Indigo */
+    --primary-600: #4f46e5;
+    --primary-500: #6366f1;
+    --primary-700: #4338ca;
+    --primary-100: #e0e7ff;
+    --primary-50: #eef2ff;
+
+    --accent-emerald: #10b981;
+    --accent-emerald-dark: #059669;
+    --accent-cyan: #06b6d4;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+
+    /* Backgrounds & Surfaces */
+    --bg-main: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #ffffff;
+    --bg-surface-muted: #f1f5f9;
+    --bg-surface-subtle: #f8fafc;
+
+    /* Text Colors */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-subtle: #94a3b8;
+    --text-inverse: #ffffff;
+
+    /* Borders */
+    --border-subtle: #e2e8f0;
+    --border-medium: #cbd5e1;
+    --border-focus: #6366f1;
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --shadow-sm: 0 2px 4px -1px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+    --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.25);
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Typography */
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Nirmala UI', Roboto, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', 'Nirmala UI', 'Latha', 'Gautami', 'Kartika', 'Tunga', 'Vrinda', 'Shruti', 'Raavi', Roboto, sans-serif;
+}
+
+/* Base Reset & Box Sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.07) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Accessibility: Skip Link */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 1rem;
+    background: var(--primary-600);
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    z-index: 10000;
+    text-decoration: none;
+    box-shadow: var(--shadow-lg);
+    transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+    top: 1rem;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+p {
+    margin-bottom: 0.75rem;
+}
+
+p:last-child {
+    margin-bottom: 0;
+}
+
+a {
+    color: var(--primary-600);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--primary-700);
+}
+
+/* Layout Containers */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Header & Navigation */
+.app-header {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-xs);
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.brand-logo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-cyan));
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--text-primary), var(--primary-600));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.brand-tagline {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* Navigation Links */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+    background: var(--bg-surface-muted);
+    color: var(--primary-600);
+}
+
+.nav-link.active {
+    background: var(--primary-50);
+    color: var(--primary-600);
+}
+
+/* Main Content Area */
+.app-main {
+    flex: 1;
+    padding: 2rem 0 3.5rem;
+}
+
+/* Section Header / Hero */
+.hero-banner {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+    background: var(--primary-50);
+    border: 1px solid var(--primary-100);
+    color: var(--primary-700);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.hero-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+/* Footer */
+.app-footer {
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+    padding: 2rem 0;
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.footer-links {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.footer-links a {
+    color: var(--text-muted);
+}
+
+.footer-links a:hover {
+    color: var(--primary-600);
+}
