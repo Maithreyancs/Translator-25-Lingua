@@ -4,8 +4,9 @@
   "description": "LinguaVoice - Multilingual Sentence Translator & Voice Playback System with Web Speech API and neural translation engine.",
   "main": "index.html",
   "scripts": {
-    "start": "npx -y serve .",
-    "dev": "npx -y serve ."
+    "start": "node server.js",
+    "offline": "node server.js",
+    "dev": "node server.js"
   },
   "keywords": [
     "translator",

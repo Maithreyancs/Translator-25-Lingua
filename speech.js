@@ -282,8 +282,8 @@ class SpeechEngine {
         const chunkText = this.speechChunks[this.currentChunkIndex];
         const langRoot = this.currentSpeechCode.split('-')[0].toLowerCase();
         
-        // Use clean Google TTS endpoint with safe URL length
-        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langRoot)}&client=tw-ob&q=${encodeURIComponent(chunkText)}`;
+        // Use local /api/tts proxy to avoid Google referer blocking and enable disk caching
+        const ttsUrl = `/api/tts?tl=${encodeURIComponent(langRoot)}&q=${encodeURIComponent(chunkText)}`;
 
         if (this.audioPlayer) {
             this.audioPlayer.pause();
@@ -307,17 +307,43 @@ class SpeechEngine {
         };
 
         this.audioPlayer.onerror = (e) => {
-            console.warn(`Audio TTS chunk ${this.currentChunkIndex} failed, attempting next chunk:`, e);
+            console.warn(`Audio TTS chunk ${this.currentChunkIndex} failed:`, e);
             // If one chunk fails, advance to next chunk
             if (this.currentChunkIndex < this.speechChunks.length - 1) {
                 this.currentChunkIndex++;
                 this._playNextAudioChunk(rate);
-            } else {
+                // Only fallback to browser SpeechSynthesis if a native voice for this language is installed
+                const availableVoices = this.getVoicesForLanguage(this.currentSpeechCode);
+                if (this.synth && availableVoices.length > 0) {
+                    try {
+                        const fallbackUtterance = new SpeechSynthesisUtterance(this.currentText);
+                        fallbackUtterance.lang = this.currentSpeechCode;
+                        fallbackUtterance.voice = availableVoices[0];
+                        fallbackUtterance.rate = rate;
+                        fallbackUtterance.onend = () => {
+                            this.isPlaying = false;
+                            this.isPaused = false;
+                            this._notifyStateChange('idle');
+                        };
+                        fallbackUtterance.onerror = () => {
+                            this.isPlaying = false;
+                            this.isPaused = false;
+                            this._notifyStateChange('idle');
+                        };
+                        this.synth.speak(fallbackUtterance);
+                        return;
+                    } catch (synthErr) {
+                        // ignore
+                    }
+                }
+
                 this.isPlaying = false;
                 this.isPaused = false;
                 this._notifyStateChange('idle');
                 if (typeof this.onError === 'function') {
-                    this.onError('Unable to complete audio playback. Please check internet connection.');
+                    const langObj = typeof getLanguageByCode === 'function' ? getLanguageByCode(this.currentSpeechCode.split('-')[0]) : null;
+                    const langName = langObj ? langObj.name : this.currentSpeechCode;
+                    this.onError(`Offline voice for ${langName} is not installed in Windows. Run .\\install-voices.ps1 to install it.`);
                 }
             }
         };

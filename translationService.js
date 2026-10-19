@@ -7,13 +7,145 @@
 
 class TranslationService {
     constructor() {
+        const getStorage = (k, def = '') => {
+            try { return typeof localStorage !== 'undefined' ? (localStorage.getItem(k) ?? def) : def; } catch (e) { return def; }
+        };
         this.cache = new Map();
         this.timeoutMs = 6000;
-        this.customApiKey = localStorage.getItem('linguavoice_custom_api_key') || '';
-        this.customApiUrl = localStorage.getItem('linguavoice_custom_api_url') || '';
+        this.customApiKey = getStorage('linguavoice_custom_api_key', '');
+        this.customApiUrl = getStorage('linguavoice_custom_api_url', '');
         
+        // Ollama Offline LLM Settings
+        this.ollamaEnabled = getStorage('linguavoice_ollama_enabled', 'true') !== 'false';
+        this.ollamaModel = getStorage('linguavoice_ollama_model', 'qwen2.5:1.5b');
+        this.strictOfflineMode = getStorage('linguavoice_strict_offline', 'false') === 'true';
+
         // Build bidirectional multi-language lookup dictionary
         this.offlineDictionary = this._initComprehensiveDictionary();
+    }
+
+    /**
+     * Check if Ollama is accessible and list models
+     * @returns {Promise<{running: boolean, models: string[]}>}
+     */
+    async checkOllamaStatus() {
+        const endpoints = ['/api/ollama/status', 'http://127.0.0.1:11434/api/tags'];
+        for (const ep of endpoints) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 2000);
+                const res = await fetch(ep, { signal: controller.signal });
+                clearTimeout(timer);
+                if (res.ok) {
+                    const data = await res.json();
+                    const models = (data.models || []).map(m => typeof m === 'string' ? m : m.name);
+                    return { running: true, models, endpoint: ep };
+                }
+            } catch (e) {
+                // try next
+            }
+        }
+        return { running: false, models: [] };
+    }
+
+    /**
+     * Provider 0: Local LLM via Ollama
+     */
+    async _translateWithOllama(text, sourceLang, targetLang, resolvedSource) {
+        const sourceObj = typeof getLanguageByCode === 'function' ? getLanguageByCode(resolvedSource) : null;
+        const targetObj = typeof getLanguageByCode === 'function' ? getLanguageByCode(targetLang) : null;
+        
+        const sourceName = sourceObj ? sourceObj.name : resolvedSource;
+        const targetName = targetObj ? targetObj.name : targetLang;
+
+        const maxTokens = Math.max(30, Math.min(100, Math.ceil(text.length * 2.5)));
+
+        // Use Chat format (matches Qwen 2.5 ChatML natively for maximum accuracy and zero preamble)
+        const chatBody = {
+            model: this.ollamaModel || 'qwen2.5:1.5b',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a professional multilingual translator. Translate directly from ${sourceName} into ${targetName}. Output ONLY the translated sentence in ${targetName}. Do NOT include pronunciation, English text, or explanation.`
+                },
+                {
+                    role: 'user',
+                    content: text
+                }
+            ],
+            stream: false,
+            options: {
+                temperature: 0.1,
+                top_p: 0.8,
+                num_predict: maxTokens,
+                num_ctx: 512,
+                num_thread: 4,
+                stop: ['<|im_end|>', '<|endoftext|>']
+            }
+        };
+
+        const endpoints = [
+            '/api/ollama/chat',
+            'http://127.0.0.1:11434/api/chat',
+            '/api/ollama/generate',
+            'http://127.0.0.1:11434/api/generate'
+        ];
+
+        let lastErr = null;
+        for (const ep of endpoints) {
+            try {
+                const isChat = ep.includes('/chat');
+                const reqBody = isChat ? chatBody : {
+                    model: this.ollamaModel || 'qwen2.5:1.5b',
+                    prompt: `Translate directly to ${targetName}.\n${sourceName}: ${text}\n${targetName}:`,
+                    stream: false,
+                    options: chatBody.options
+                };
+
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 18000); // 18s allows cold load
+                const res = await fetch(ep, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reqBody),
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+                let output = (isChat && data.message ? data.message.content : data.response) || '';
+                output = output.trim();
+
+                // Clean reasoning/thinking tags
+                output = output.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                
+                // Strip conversational preambles and prefix tags
+                const prefixRegex = new RegExp(`^(${targetName}|${targetObj ? targetObj.name : ''}|translation|translated text):\\s*`, 'i');
+                output = output.replace(prefixRegex, '').trim();
+                
+                // Remove outer quotes if wrapped in quotes
+                if ((output.startsWith('"') && output.endsWith('"')) || (output.startsWith('\'') && output.endsWith('\''))) {
+                    output = output.slice(1, -1).trim();
+                }
+
+                if (output) {
+                    return {
+                        translatedText: output,
+                        detectedSourceLang: resolvedSource,
+                        provider: 'ollama',
+                        model: this.ollamaModel
+                    };
+                }
+            } catch (err) {
+                lastErr = err;
+            }
+        }
+
+        throw lastErr || new Error('Ollama translation failed');
     }
 
     /**
@@ -78,7 +210,7 @@ class TranslationService {
      * @param {string} text - Text to translate (in ANY language)
      * @param {string} sourceLang - Source language code or 'auto'
      * @param {string} targetLang - Target language code
-     * @returns {Promise<{translatedText: string, detectedSourceLang: string, provider: string}>}
+     * @returns {Promise<{translatedText: string, detectedSourceLang: string, provider: string, model?: string}>}
      */
     async translate(text, sourceLang = 'auto', targetLang = 'ta') {
         const trimmed = (text || '').trim();
@@ -100,7 +232,7 @@ class TranslationService {
         }
 
         // Cache Key
-        const cacheKey = `${sourceLang}(${resolvedSource})->${targetLang}:${trimmed}`;
+        const cacheKey = `${this.ollamaEnabled ? 'ollama:' + this.ollamaModel + ':' : ''}${sourceLang}(${resolvedSource})->${targetLang}:${trimmed}`;
         if (this.cache.has(cacheKey)) {
             return {
                 ...this.cache.get(cacheKey),
@@ -109,6 +241,34 @@ class TranslationService {
         }
 
         let lastError = null;
+
+        // 0. Primary Provider: Local LLM via Ollama (When Enabled)
+        if (this.ollamaEnabled) {
+            try {
+                const ollamaResult = await this._translateWithOllama(trimmed, sourceLang, targetLang, resolvedSource);
+                if (ollamaResult && ollamaResult.translatedText) {
+                    this.cache.set(cacheKey, ollamaResult);
+                    return ollamaResult;
+                }
+            } catch (err) {
+                console.warn('Ollama local LLM failed:', err);
+                lastError = err;
+            }
+        }
+
+        // Check if device is offline (Wi-Fi disconnected or Strict Offline)
+        const isOffline = this.strictOfflineMode || (typeof navigator !== 'undefined' && navigator.onLine === false);
+        if (isOffline) {
+            const offlineDict = this._lookupOffline(trimmed, resolvedSource, targetLang);
+            if (offlineDict) {
+                return {
+                    translatedText: offlineDict,
+                    detectedSourceLang: resolvedSource,
+                    provider: 'smart-dictionary'
+                };
+            }
+            throw new Error(`Offline Mode: Local LLM (${this.ollamaModel}) was unreachable. Please verify Ollama is running ('ollama serve').`);
+        }
 
         // 1. Google Translate Client5 API (High reliability, CORS friendly)
         try {
@@ -171,8 +331,8 @@ class TranslationService {
         // If all network providers failed and no dictionary match
         throw new Error(
             lastError 
-                ? `Translation service error: ${lastError.message}. Please check your internet connection.` 
-                : 'Unable to translate sentence. Please try again.'
+                ? `Translation service error: ${lastError.message}.` 
+                : 'Unable to translate sentence. Please check your Ollama or internet connection.'
         );
     }
 

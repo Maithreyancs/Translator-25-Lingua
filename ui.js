@@ -71,6 +71,16 @@ class UIController {
             historyBadgeCount: document.getElementById('history-badge-count'),
             favoritesBadgeCount: document.getElementById('favorites-badge-count'),
 
+            // Offline LLM Controls
+            ollamaToggle: document.getElementById('ollama-toggle'),
+            ollamaStatusBadge: document.getElementById('ollama-status-badge'),
+            ollamaStatusDot: document.getElementById('ollama-status-dot'),
+            ollamaStatusText: document.getElementById('ollama-status-text'),
+            ollamaModelSelect: document.getElementById('ollama-model-select'),
+            refreshOllamaBtn: document.getElementById('refresh-ollama-btn'),
+            strictOfflineToggle: document.getElementById('strict-offline-toggle'),
+            providerBadge: document.getElementById('provider-badge'),
+
             // Toast Notifications
             toastContainer: document.getElementById('toast-container')
         };
@@ -204,6 +214,21 @@ class UIController {
             this.elements.targetCharCount.textContent = `${translatedText.length} characters`;
         }
 
+        // Show translation provider pill
+        if (this.elements.providerBadge) {
+            this.elements.providerBadge.style.display = 'inline-flex';
+            if (translationData.provider === 'ollama') {
+                this.elements.providerBadge.className = 'provider-pill ollama';
+                this.elements.providerBadge.innerHTML = `<span aria-hidden="true">🤖</span> Ollama (${translationData.model || 'LLM'})`;
+            } else if (translationData.provider === 'smart-dictionary') {
+                this.elements.providerBadge.className = 'provider-pill dictionary';
+                this.elements.providerBadge.innerHTML = `<span aria-hidden="true">📖</span> Offline Dictionary`;
+            } else {
+                this.elements.providerBadge.className = 'provider-pill cloud';
+                this.elements.providerBadge.innerHTML = `<span aria-hidden="true">🌐</span> Cloud Neural`;
+            }
+        }
+
         // Update Favorite star state
         this.updateFavoriteButtonState(originalText, targetLang);
 
@@ -215,9 +240,14 @@ class UIController {
     }
 
     /**
-     * Set loading state during translation
+     * Set loading state during translation with live seconds timer
      */
     setLoading(isLoading) {
+        if (this._loadingTimer) {
+            clearInterval(this._loadingTimer);
+            this._loadingTimer = null;
+        }
+
         if (this.elements.translateSpeakBtn) {
             this.elements.translateSpeakBtn.disabled = isLoading;
         }
@@ -227,14 +257,74 @@ class UIController {
         if (this.elements.translateSpinner) {
             this.elements.translateSpinner.style.display = isLoading ? 'inline-block' : 'none';
         }
-        if (this.elements.translateBtnText) {
-            this.elements.translateBtnText.textContent = isLoading ? 'Translating...' : 'Translate & Speak';
+
+        if (isLoading) {
+            const isOllama = typeof translationService !== 'undefined' && translationService.ollamaEnabled;
+            const modelName = (typeof translationService !== 'undefined' && translationService.ollamaModel) || 'LLM';
+            let elapsed = 0;
+
+            const updateProgress = () => {
+                if (this.elements.translateBtnText) {
+                    this.elements.translateBtnText.textContent = isOllama 
+                        ? `Translating (${modelName}${elapsed > 0 ? ' • ' + elapsed + 's' : ''})...`
+                        : `Translating...`;
+                }
+                if (this.elements.statusMessage) {
+                    if (isOllama) {
+                        if (elapsed > 12) {
+                            this.elements.statusMessage.textContent = `Generating on CPU (${elapsed}s)... (Tip: qwen2.5:1.5b is 10x faster)`;
+                        } else {
+                            this.elements.statusMessage.textContent = `Local LLM generating on CPU (${elapsed}s)...`;
+                        }
+                    } else {
+                        this.elements.statusMessage.textContent = `Translating sentence...`;
+                    }
+                }
+            };
+
+            updateProgress();
+            this._loadingTimer = setInterval(() => {
+                elapsed++;
+                updateProgress();
+            }, 1000);
+        } else {
+            if (this.elements.translateBtnText) {
+                this.elements.translateBtnText.textContent = 'Translate & Speak';
+            }
+            if (this.elements.statusMessage) {
+                this.elements.statusMessage.textContent = 'Ready';
+            }
         }
+
         if (this.elements.outputCard) {
             if (isLoading) {
                 this.elements.outputCard.classList.add('is-translating');
             } else {
                 this.elements.outputCard.classList.remove('is-translating');
+            }
+        }
+    }
+
+    /**
+     * Update Ollama Status in UI
+     */
+    updateOllamaStatus(status) {
+        const { running, models = [], selectedModel = 'qwen3.5:4b' } = status;
+        if (this.elements.ollamaStatusDot) {
+            this.elements.ollamaStatusDot.className = `status-indicator-dot ${running ? 'online' : 'offline'}`;
+        }
+        if (this.elements.ollamaStatusText) {
+            this.elements.ollamaStatusText.textContent = running 
+                ? `Ollama Connected (${models.length} model${models.length === 1 ? '' : 's'})` 
+                : 'Ollama Offline (Run "ollama serve")';
+        }
+        if (this.elements.ollamaModelSelect) {
+            if (models.length > 0) {
+                this.elements.ollamaModelSelect.innerHTML = models.map(m => `
+                    <option value="${m}" ${m === selectedModel ? 'selected' : ''}>${m}</option>
+                `).join('');
+            } else {
+                this.elements.ollamaModelSelect.innerHTML = `<option value="${selectedModel}">${selectedModel}</option>`;
             }
         }
     }

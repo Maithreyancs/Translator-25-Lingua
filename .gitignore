@@ -1,0 +1,12 @@
+# Cache and temporary directories
+.cache/
+LinguaVoice-Offline-Package/
+LinguaVoice-Offline-Package.zip
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db

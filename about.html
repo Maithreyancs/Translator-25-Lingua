@@ -7,9 +7,9 @@
     <title>About LinguaVoice - Project Architecture & Documentation</title>
     
     <!-- CSS Design System -->
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/components.css">
-    <link rel="stylesheet" href="../css/responsive.css">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./components.css">
+    <link rel="stylesheet" href="./responsive.css">
     <style>
         .doc-section {
             background: var(--bg-surface);
@@ -100,7 +100,7 @@
                     </div>
 
                     <nav class="header-nav" role="navigation" aria-label="Main Navigation">
-                        <a href="../index.html" class="nav-link">
+                        <a href="index.html" class="nav-link">
                             <span aria-hidden="true">🏠</span> Studio
                         </a>
                         <a href="history.html" class="nav-link">
@@ -237,7 +237,7 @@ multilingual-translator/
                     <h2>4. Technical Implementation</h2>
                     <h3>How Translation Works:</h3>
                     <p>
-                        When a translation is requested, <code>TranslatorController</code> validates the input and calls <code>translationService.translate(text, sourceLang, targetLang)</code>. The service queries Google's GTX single translation endpoint, concatenates multi-segment sentences, detects the input language when "Auto Detect" is used, and caches the result. If a network interruption occurs, it automatically fails over to the MyMemory API or the local offline phrasebook.
+                        When a translation is requested, <code>TranslatorController</code> validates the input and calls <code>translationService.translate(text, sourceLang, targetLang)</code>. By default, LinguaVoice queries your local <strong>Ollama LLM engine</strong> (e.g. <code>qwen3.5:4b</code>, <code>qwen2.5:3b</code>) completely offline with zero latency or cloud tracking. If Ollama is offline and Strict Offline Mode is disabled, it seamlessly falls back to neural cloud endpoints (Google GTX, MyMemory, Lingva) or the built-in bidirectional 25-language offline dictionary.
                     </p>
 
                     <h3>How Text-to-Speech Works:</h3>
@@ -263,7 +263,7 @@ multilingual-translator/
                 <div class="footer-content">
                     <p>© 2026 LinguaVoice • Multilingual Sentence Translator & Voice Playback System</p>
                     <div class="footer-links">
-                        <a href="../index.html">Studio Home</a>
+                        <a href="index.html">Studio Home</a>
                         <a href="history.html">History & Favorites</a>
                     </div>
                 </div>

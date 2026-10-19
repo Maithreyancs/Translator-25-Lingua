@@ -62,7 +62,55 @@ const LinguaVoiceApp = {
         uiController.renderFavorites();
         uiController.updateInputCounter('');
 
+        // 7. Initialize Ollama Offline LLM Engine
+        this.initOllama();
+
+        // 8. Register Offline Service Worker for 100% browser caching
+        if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+            navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+                console.log('ServiceWorker registered successfully (Offline ready):', reg.scope);
+            }).catch((err) => {
+                console.log('ServiceWorker registration skipped:', err);
+            });
+        }
+
         console.log('LinguaVoice Ready.');
+    },
+
+    async initOllama() {
+        const el = uiController.elements;
+        if (el.ollamaToggle) {
+            el.ollamaToggle.checked = translationService.ollamaEnabled;
+        }
+        if (el.strictOfflineToggle) {
+            el.strictOfflineToggle.checked = translationService.strictOfflineMode;
+        }
+
+        try {
+            const status = await translationService.checkOllamaStatus();
+            
+            // Prefer lightning-fast non-reasoning models (e.g. qwen2.5:1.5b) over slow thinking models (qwen3.5:4b)
+            let chosenModel = translationService.ollamaModel;
+            const fastModel = status.models.find(m => m.includes('qwen2.5:1.5b')) || status.models.find(m => m.includes('qwen2.5'));
+            
+            if (fastModel && (!chosenModel || chosenModel.includes('qwen3.5') || !status.models.includes(chosenModel))) {
+                chosenModel = fastModel;
+                translationService.ollamaModel = chosenModel;
+                try { localStorage.setItem('linguavoice_ollama_model', chosenModel); } catch (e) {}
+            } else if (status.models.length > 0 && !status.models.includes(chosenModel)) {
+                chosenModel = status.models[0];
+                translationService.ollamaModel = chosenModel;
+                try { localStorage.setItem('linguavoice_ollama_model', chosenModel); } catch (e) {}
+            }
+
+            uiController.updateOllamaStatus({
+                running: status.running,
+                models: status.models,
+                selectedModel: chosenModel
+            });
+        } catch (err) {
+            uiController.updateOllamaStatus({ running: false, models: [] });
+        }
     },
 
     attachEventListeners() {
@@ -460,6 +508,47 @@ const LinguaVoiceApp = {
                     }
                     uiController.showToast('Favorites cleared.', 'info');
                 }
+            });
+        }
+
+        // --- Offline LLM Engine Controls ---
+        if (el.ollamaToggle) {
+            el.ollamaToggle.addEventListener('change', (e) => {
+                translationService.ollamaEnabled = e.target.checked;
+                localStorage.setItem('linguavoice_ollama_enabled', e.target.checked);
+                uiController.showToast(
+                    e.target.checked ? 'Offline LLM Mode Enabled (Ollama)' : 'Cloud Translation Mode Enabled',
+                    'info',
+                    2000
+                );
+            });
+        }
+
+        if (el.ollamaModelSelect) {
+            el.ollamaModelSelect.addEventListener('change', (e) => {
+                translationService.ollamaModel = e.target.value;
+                localStorage.setItem('linguavoice_ollama_model', e.target.value);
+                uiController.showToast(`Active LLM Model: ${e.target.value}`, 'success', 2000);
+            });
+        }
+
+        if (el.strictOfflineToggle) {
+            el.strictOfflineToggle.addEventListener('change', (e) => {
+                translationService.strictOfflineMode = e.target.checked;
+                localStorage.setItem('linguavoice_strict_offline', e.target.checked);
+                uiController.showToast(
+                    e.target.checked ? 'Strict Offline Mode Active (Zero cloud calls)' : 'Cloud fallback permitted',
+                    'info',
+                    2500
+                );
+            });
+        }
+
+        if (el.refreshOllamaBtn) {
+            el.refreshOllamaBtn.addEventListener('click', async () => {
+                uiController.showToast('Checking Ollama status...', 'info', 1500);
+                await this.initOllama();
+                uiController.showToast('Ollama status updated!', 'success', 2000);
             });
         }
     },

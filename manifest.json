@@ -1,0 +1,16 @@
+{
+  "name": "LinguaVoice - 25-Lingua Offline Studio",
+  "short_name": "LinguaVoice",
+  "description": "Multilingual Sentence Translator & Voice Studio running 100% offline in browser",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "./favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

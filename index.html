@@ -10,6 +10,7 @@
      <link rel="stylesheet" href="./style.css">
      <link rel="stylesheet" href="./components.css">
      <link rel="stylesheet" href="./responsive.css">
+     <link rel="manifest" href="./manifest.json">
     
 </head>
 <body>
@@ -32,10 +33,10 @@
                         <a href="index.html" class="nav-link active" aria-current="page">
                             <span aria-hidden="true">🏠</span> Studio
                         </a>
-                        <a href="pages/history.html" class="nav-link">
+                        <a href="history.html" class="nav-link">
                             <span aria-hidden="true">📜</span> History & Saved
                         </a>
-                        <a href="pages/about.html" class="nav-link">
+                        <a href="about.html" class="nav-link">
                             <span aria-hidden="true">ℹ️</span> About Project
                         </a>
                     </nav>
@@ -55,6 +56,41 @@
                     <p class="hero-subtitle">
                         Enter a sentence in any language, translate it instantly to Tamil, Hindi, Telugu, Malayalam, Japanese, French, and 20+ more languages, and listen to natural audio playback.
                     </p>
+                </section>
+
+                <!-- Offline LLM Engine Control Bar -->
+                <section class="offline-engine-panel" aria-label="Offline LLM Configuration">
+                    <div class="engine-panel-inner">
+                        <div class="engine-status-col">
+                            <div class="engine-badge-pill" id="ollama-status-badge">
+                                <span class="status-indicator-dot checking" id="ollama-status-dot"></span>
+                                <span id="ollama-status-text">Detecting Ollama...</span>
+                            </div>
+                            <label class="switch-toggle" title="Toggle Ollama Offline Translation">
+                                <input type="checkbox" id="ollama-toggle" checked>
+                                <span class="switch-slider"></span>
+                                <span class="switch-label">Offline LLM Mode</span>
+                            </label>
+                        </div>
+
+                        <div class="engine-controls-col">
+                            <div class="engine-model-group">
+                                <label for="ollama-model-select" class="engine-label">Model:</label>
+                                <select id="ollama-model-select" class="select-picker select-picker-sm" aria-label="Ollama LLM Model">
+                                    <option value="qwen2.5:1.5b" selected>qwen2.5:1.5b (Fastest • ~500ms)</option>
+                                    <option value="qwen3.5:4b">qwen3.5:4b (Reasoning model)</option>
+                                </select>
+                                <button type="button" id="refresh-ollama-btn" class="btn btn-icon-square btn-ghost-sm" title="Refresh local Ollama models" aria-label="Refresh models">
+                                    <span aria-hidden="true">🔄</span>
+                                </button>
+                            </div>
+
+                            <label class="checkbox-label" title="Strict Offline Mode: Never connect to cloud translation APIs">
+                                <input type="checkbox" id="strict-offline-toggle">
+                                <span>Strict Offline (100% Air-Gapped)</span>
+                            </label>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Quick Sample Phrases -->
@@ -161,6 +197,7 @@
                             <div class="card-footer">
                                 <div class="footer-meta">
                                     <span id="target-char-count">0 characters</span>
+                                    <span class="provider-pill" id="provider-badge" style="display: none;"></span>
                                 </div>
                                 <div class="footer-actions">
                                     <button type="button" id="copy-translation-btn" class="btn btn-outline" disabled title="Copy translation">
@@ -305,8 +342,8 @@
                 <div class="footer-content">
                     <p>© 2026 LinguaVoice • Multilingual Sentence Translator & Voice Playback System</p>
                     <div class="footer-links">
-                        <a href="pages/about.html">Architecture & Docs</a>
-                        <a href="pages/history.html">Full History Manager</a>
+                        <a href="about.html">Architecture & Docs</a>
+                        <a href="history.html">Full History Manager</a>
                     </div>
                 </div>
             </div>
@@ -317,13 +354,13 @@
     <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Application Script Modules (In Dependency Order) -->
-    <script src="js/languages.js"></script>
-    <script src="services/translationService.js"></script>
-    <script src="js/speech.js"></script>
-    <script src="js/history.js"></script>
-    <script src="js/favorites.js"></script>
-    <script src="js/translator.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/app.js"></script>
+    <script src="./languages.js"></script>
+    <script src="./translationService.js"></script>
+    <script src="./speech.js"></script>
+    <script src="./history.js"></script>
+    <script src="./favorites.js"></script>
+    <script src="./translator.js"></script>
+    <script src="./ui.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
