@@ -271,13 +271,10 @@ const LinguaVoiceApp = {
                 
                 speechEngine.toggleVoiceInput(
                     speechCode,
-                    (transcript, isFinal) => {
+                    (transcript) => {
                         if (el.sourceTextInput) {
                             el.sourceTextInput.value = transcript;
                             uiController.updateInputCounter(transcript);
-                            if (isFinal) {
-                                uiController.showToast('Voice transcribed!', 'success', 2000);
-                            }
                         }
                     },
                     (isListening) => {
@@ -288,6 +285,9 @@ const LinguaVoiceApp = {
                         } else {
                             el.micBtn.classList.remove('recording');
                             el.micBtn.setAttribute('title', 'Speak input (Microphone)');
+                            if (el.sourceTextInput && el.sourceTextInput.value.trim().length > 0) {
+                                uiController.showToast('Voice transcribed!', 'success', 2000);
+                            }
                         }
                     }
                 );

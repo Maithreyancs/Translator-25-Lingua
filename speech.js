@@ -282,15 +282,18 @@ class SpeechEngine {
         const chunkText = this.speechChunks[this.currentChunkIndex];
         const langRoot = this.currentSpeechCode.split('-')[0].toLowerCase();
         
-        // Use local /api/tts proxy to avoid Google referer blocking and enable disk caching
-        const ttsUrl = `/api/tts?tl=${encodeURIComponent(langRoot)}&q=${encodeURIComponent(chunkText)}`;
+        // Use local /api/tts proxy if on HTTP/HTTPS, or direct Google TTS if on file://
+        const isHttp = typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:');
+        const primaryTtsUrl = isHttp
+            ? `/api/tts?tl=${encodeURIComponent(langRoot)}&q=${encodeURIComponent(chunkText)}`
+            : `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langRoot)}&client=tw-ob&q=${encodeURIComponent(chunkText)}`;
 
         if (this.audioPlayer) {
             this.audioPlayer.pause();
             this.audioPlayer = null;
         }
 
-        this.audioPlayer = new Audio(ttsUrl);
+        this.audioPlayer = new Audio(primaryTtsUrl);
         this.audioPlayer.playbackRate = Math.max(0.5, Math.min(2.0, rate));
 
         this.audioPlayer.onplay = () => {
@@ -306,56 +309,102 @@ class SpeechEngine {
             }
         };
 
-        this.audioPlayer.onerror = (e) => {
-            console.warn(`Audio TTS chunk ${this.currentChunkIndex} failed:`, e);
-            // If one chunk fails, advance to next chunk
+        let hasFallenBackToDirectGoogle = false;
+
+        const fallbackToSpeechSynthesis = () => {
+            if (this.synth) {
+                try {
+                    const availableVoices = this.getVoicesForLanguage(this.currentSpeechCode);
+                    const fallbackUtterance = new SpeechSynthesisUtterance(this.currentText);
+                    fallbackUtterance.lang = this.currentSpeechCode;
+                    if (availableVoices.length > 0) {
+                        fallbackUtterance.voice = availableVoices[0];
+                    }
+                    fallbackUtterance.rate = rate;
+                    fallbackUtterance.pitch = this.pitch;
+                    fallbackUtterance.volume = this.volume;
+                    fallbackUtterance.onend = () => {
+                        this.isPlaying = false;
+                        this.isPaused = false;
+                        this._notifyStateChange('idle');
+                    };
+                    fallbackUtterance.onerror = () => {
+                        this.isPlaying = false;
+                        this.isPaused = false;
+                        this._notifyStateChange('idle');
+                    };
+                    this.synth.speak(fallbackUtterance);
+                    return true;
+                } catch (synthErr) {
+                    console.warn('SpeechSynthesis fallback error:', synthErr);
+                }
+            }
+            return false;
+        };
+
+        const handleFatalAudioError = (err) => {
+            console.warn(`Audio TTS failed:`, err);
+            // If there are more chunks in a long text, try advancing
             if (this.currentChunkIndex < this.speechChunks.length - 1) {
                 this.currentChunkIndex++;
                 this._playNextAudioChunk(rate);
-                // Only fallback to browser SpeechSynthesis if a native voice for this language is installed
-                const availableVoices = this.getVoicesForLanguage(this.currentSpeechCode);
-                if (this.synth && availableVoices.length > 0) {
-                    try {
-                        const fallbackUtterance = new SpeechSynthesisUtterance(this.currentText);
-                        fallbackUtterance.lang = this.currentSpeechCode;
-                        fallbackUtterance.voice = availableVoices[0];
-                        fallbackUtterance.rate = rate;
-                        fallbackUtterance.onend = () => {
-                            this.isPlaying = false;
-                            this.isPaused = false;
-                            this._notifyStateChange('idle');
-                        };
-                        fallbackUtterance.onerror = () => {
-                            this.isPlaying = false;
-                            this.isPaused = false;
-                            this._notifyStateChange('idle');
-                        };
-                        this.synth.speak(fallbackUtterance);
-                        return;
-                    } catch (synthErr) {
-                        // ignore
-                    }
-                }
-
-                this.isPlaying = false;
-                this.isPaused = false;
-                this._notifyStateChange('idle');
-                if (typeof this.onError === 'function') {
-                    const langObj = typeof getLanguageByCode === 'function' ? getLanguageByCode(this.currentSpeechCode.split('-')[0]) : null;
-                    const langName = langObj ? langObj.name : this.currentSpeechCode;
-                    this.onError(`Offline voice for ${langName} is not installed in Windows. Run .\\install-voices.ps1 to install it.`);
-                }
+                return;
             }
+
+            // Otherwise, fallback to native SpeechSynthesis
+            if (fallbackToSpeechSynthesis()) {
+                return;
+            }
+
+            this.isPlaying = false;
+            this.isPaused = false;
+            this._notifyStateChange('idle');
+            if (typeof this.onError === 'function') {
+                const langObj = typeof getLanguageByCode === 'function' ? getLanguageByCode(this.currentSpeechCode.split('-')[0]) : null;
+                const langName = langObj ? langObj.name : this.currentSpeechCode;
+                this.onError(`Audio playback for ${langName} failed. Please check your connection or install local voice packs.`);
+            }
+        };
+
+        this.audioPlayer.onerror = (e) => {
+            // If local /api/tts proxy returned 404/error on HTTP, retry with direct Google TTS before giving up
+            if (isHttp && !hasFallenBackToDirectGoogle) {
+                hasFallenBackToDirectGoogle = true;
+                const directGoogleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(langRoot)}&client=tw-ob&q=${encodeURIComponent(chunkText)}`;
+                if (this.audioPlayer) {
+                    this.audioPlayer.pause();
+                }
+                this.audioPlayer = new Audio(directGoogleUrl);
+                this.audioPlayer.playbackRate = Math.max(0.5, Math.min(2.0, rate));
+                this.audioPlayer.onended = () => {
+                    if (this.isPlaying && !this.isPaused) {
+                        this.currentChunkIndex++;
+                        this._playNextAudioChunk(rate);
+                    }
+                };
+                this.audioPlayer.onerror = (err2) => handleFatalAudioError(err2);
+                const retryPromise = this.audioPlayer.play();
+                if (retryPromise !== undefined) {
+                    retryPromise.catch(err2 => handleFatalAudioError(err2));
+                }
+                return;
+            }
+
+            handleFatalAudioError(e);
         };
 
         const playPromise = this.audioPlayer.play();
         if (playPromise !== undefined) {
             playPromise.catch(err => {
-                console.warn('Audio play error (user interaction may be needed):', err);
-                // Try fallback to next or end gracefully
-                this.isPlaying = false;
-                this.isPaused = false;
-                this._notifyStateChange('idle');
+                console.warn('Audio play error (user interaction or autoplay restriction):', err);
+                if (isHttp && !hasFallenBackToDirectGoogle) {
+                    hasFallenBackToDirectGoogle = true;
+                    this.audioPlayer.onerror(err);
+                } else if (!fallbackToSpeechSynthesis()) {
+                    this.isPlaying = false;
+                    this.isPaused = false;
+                    this._notifyStateChange('idle');
+                }
             });
         }
     }
@@ -402,6 +451,7 @@ class SpeechEngine {
             this.audioPlayer.currentTime = 0;
             this.audioPlayer = null;
         }
+        this.stopVoiceInput();
         this.speechChunks = [];
         this.currentChunkIndex = 0;
         this.isPlaying = false;
@@ -464,77 +514,118 @@ class SpeechEngine {
     // ==========================================
 
     _initSpeechRecognition() {
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition || null;
-        if (!SpeechRec) {
-            return;
-        }
+        const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition || null);
+        this.recognitionSupported = Boolean(SpeechRec);
+    }
 
-        try {
-            this.recognition = new SpeechRec();
-            this.recognition.continuous = false;
-            this.recognition.interimResults = true;
-        } catch (e) {
-            console.warn('SpeechRecognition initialization error:', e);
+    stopVoiceInput() {
+        if (this.recognition) {
+            try {
+                this.recognition.abort();
+            } catch (e) {}
+            this.recognition = null;
         }
+        this.isListening = false;
     }
 
     toggleVoiceInput(langCode = 'en-US', onResult, onState) {
-        if (!this.recognition) {
+        const SpeechRec = (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition || null);
+        if (!SpeechRec) {
             if (typeof this.onError === 'function') {
-                this.onError('Voice input is not supported in this browser. Please try Google Chrome or Microsoft Edge.');
+                this.onError('Voice input is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
             }
             return;
         }
 
         if (this.isListening) {
-            this.recognition.stop();
-            this.isListening = false;
+            this.stopVoiceInput();
             if (typeof onState === 'function') onState(false);
             return;
         }
 
         try {
-            this.recognition.lang = langCode === 'auto' ? 'en-US' : langCode;
+            // Ensure previous recognition instance is cleanly terminated
+            if (this.recognition) {
+                try { this.recognition.abort(); } catch (e) {}
+                this.recognition = null;
+            }
+
+            const recognition = new SpeechRec();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognition.lang = (!langCode || langCode === 'auto') ? 'en-US' : langCode;
+            this.recognition = recognition;
+
             this.isListening = true;
             if (typeof onState === 'function') onState(true);
 
-            this.recognition.onresult = (event) => {
+            recognition.onresult = (event) => {
+                let accumulatedFinal = '';
                 let interimTranscript = '';
-                let finalTranscript = '';
 
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
+                // Loop from 0 to results.length to preserve all earlier recognized sentences
+                for (let i = 0; i < event.results.length; ++i) {
+                    const res = event.results[i];
+                    if (res.isFinal) {
+                        accumulatedFinal += res[0].transcript + ' ';
                     } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        interimTranscript += res[0].transcript;
                     }
                 }
 
-                const result = finalTranscript || interimTranscript;
-                if (typeof onResult === 'function' && result) {
-                    onResult(result, Boolean(finalTranscript));
+                const fullTranscript = (accumulatedFinal + interimTranscript).trim();
+                if (typeof onResult === 'function' && fullTranscript) {
+                    onResult(fullTranscript, Boolean(accumulatedFinal && !interimTranscript));
                 }
             };
 
-            this.recognition.onerror = (event) => {
+            recognition.onerror = (event) => {
                 console.warn('Voice input error:', event.error);
+                if (event.error === 'no-speech') {
+                    // Normal silence timeout; do not alert user
+                    return;
+                }
+
                 this.isListening = false;
                 if (typeof onState === 'function') onState(false);
-                if (event.error !== 'no-speech' && typeof this.onError === 'function') {
+
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    if (typeof this.onError === 'function') {
+                        this.onError('Microphone permission was denied. Please allow microphone access in your browser settings.');
+                    }
+                    return;
+                }
+                if (event.error === 'network') {
+                    if (typeof this.onError === 'function') {
+                        this.onError('Voice recognition network error. Web Speech in Chrome/Edge requires an active internet connection to speech servers.');
+                    }
+                    return;
+                }
+                if (event.error === 'audio-capture') {
+                    if (typeof this.onError === 'function') {
+                        this.onError('No microphone was detected. Please check your microphone hardware connection.');
+                    }
+                    return;
+                }
+                if (typeof this.onError === 'function') {
                     this.onError(`Voice input error: ${event.error}`);
                 }
             };
 
-            this.recognition.onend = () => {
+            recognition.onend = () => {
                 this.isListening = false;
                 if (typeof onState === 'function') onState(false);
             };
 
-            this.recognition.start();
+            recognition.start();
         } catch (err) {
             console.error('Error starting speech recognition:', err);
             this.isListening = false;
             if (typeof onState === 'function') onState(false);
+            if (typeof this.onError === 'function') {
+                this.onError(`Could not start microphone: ${err.message || err}`);
+            }
         }
     }
 }
